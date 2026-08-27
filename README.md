@@ -44,7 +44,6 @@ To-Do-List/
 ├── app.py
 ├── requirements.txt
 ├── .gitignore
-├── .env
 │
 ├── templates/
 │   ├── base.html
@@ -67,8 +66,8 @@ To-Do-List/
 Clone the repository:
 
 ```bash
-git clone https://github.com/your-username/your-repository.git
-cd To-Do-List
+git clone https://github.com/alireza-oman/Nature-Task-Manager.git
+cd Nature-Task-Manager
 ```
 
 Create a virtual environment:
