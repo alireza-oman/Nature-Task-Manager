@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Task - Nature Task Manager{% endblock %}
+
+{% block content %}
+<header>
+    <h2>Edit Task</h2>
+</header>
+
+<div class="form-content">
+    <form action="{{ url_for('update', task_id=task.id) }}" method="POST">
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" id="title" name="title" value="{{ task.title }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea id="description" name="description">{{ task.description or '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+                <option value="personal" {% if task.category == 'personal' %}selected{% endif %}>🌱 Personal</option>
+                <option value="work" {% if task.category == 'work' %}selected{% endif %}>💼 Work</option>
+                <option value="study" {% if task.category == 'study' %}selected{% endif %}>📚 Study</option>
+                <option value="shopping" {% if task.category == 'shopping' %}selected{% endif %}>🛒 Shopping</option>
+                <option value="fitness" {% if task.category == 'fitness' %}selected{% endif %}>🏃 Fitness</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="date">Due Date</label>
+            <input type="date" id="date" name="date" value="{{ task.date.strftime('%Y-%m-%d') if task.date else '' }}">
+        </div>
+
+        <div class="form-group">
+            <label for="priority">Priority</label>
+            <select id="priority" name="priority">
+                <option value="low" {% if task.priority == 'low' %}selected{% endif %}>Low</option>
+                <option value="medium" {% if task.priority == 'medium' %}selected{% endif %}>Medium</option>
+                <option value="high" {% if task.priority == 'high' %}selected{% endif %}>High</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="active" {% if task.status == 'active' %}selected{% endif %}>Active</option>
+                <option value="completed" {% if task.status == 'completed' %}selected{% endif %}>Completed</option>
+            </select>
+        </div>
+
+        <div class="form-group" style="display: flex; align-items: center; gap: 8px;">
+            <input type="checkbox" id="is_pinned" name="is_pinned" {% if task.is_pinned %}checked{% endif %} style="width: 18px; height: 18px; accent-color: var(--primary-color);">
+            <label for="is_pinned" style="margin: 0; cursor: pointer;">★ Pin to top</label>
+        </div>
+
+        <div class="btn-group" style="display: flex; gap: 10px; margin-top: 20px;">
+            <a href="{{ url_for('home') }}" class="btn btn-cancel" style="flex: 1;">Cancel</a>
+            <button type="submit" class="btn btn-primary" style="flex: 1;">Save Changes</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

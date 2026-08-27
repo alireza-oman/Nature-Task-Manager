@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}My Tasks - Nature Task Manager{% endblock %}
+
+{% block content %}
+<header>
+    <div class="header-content">
+        <h1>🌲 My Tasks</h1>
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <button id="theme-toggle-btn" class="theme-btn" onclick="toggleDarkMode()" title="Toggle Dark/Light Mode">🌙</button>
+            {% if session.get('user_id') %}
+                <a href="{{ url_for('logout') }}" class="btn btn-auth" onclick="return confirm('Log out?');">Log Out</a>
+            {% else %}
+                <a href="{{ url_for('login') }}" class="btn btn-auth">Log In</a>
+                <a href="{{ url_for('register') }}" class="btn btn-primary-auth">Sign Up</a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+{% if session.get('user_id') %}
+<!-- 📊 Progress Bar Card -->
+<div class="progress-card">
+    <div class="progress-info">
+        <span>Daily Completion</span>
+        <span>{{ completed_count }} of {{ total_count }} ({{ progress_percent }}%)</span>
+    </div>
+    <div class="progress-track">
+        <div class="progress-fill" style="width: {{ progress_percent }}%;"></div>
+    </div>
+</div>
+
+<!-- Search -->
+<div class="search-section">
+    <form action="{{ url_for('home') }}" method="GET" class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <input type="text" name="search" class="search-input" placeholder="Search tasks..." value="{{ request.args.get('search', '') }}">
+        <button type="submit" style="display: none;"></button>
+    </form>
+</div>
+
+<!-- 🔽 Multi-Filter Bar -->
+<div class="filters-row">
+    <form id="filter-form" action="{{ url_for('home') }}" method="GET" style="display: contents;">
+        <!-- Status Filter -->
+        <select name="filter" class="filter-select" onchange="this.form.submit()">
+            <option value="all" {% if request.args.get('filter') == 'all' %}selected{% endif %}>Status: All</option>
+            <option value="active" {% if request.args.get('filter') == 'active' %}selected{% endif %}>Active</option>
+            <option value="completed" {% if request.args.get('filter') == 'completed' %}selected{% endif %}>Completed</option>
+            <option value="high" {% if request.args.get('filter') == 'high' %}selected{% endif %}>High Priority</option>
+        </select>
+
+        <!-- Category Filter -->
+        <select name="category" class="filter-select" onchange="this.form.submit()">
+            <option value="all" {% if request.args.get('category') == 'all' %}selected{% endif %}>Category: All</option>
+            <option value="personal" {% if request.args.get('category') == 'personal' %}selected{% endif %}>Personal</option>
+            <option value="work" {% if request.args.get('category') == 'work' %}selected{% endif %}>Work</option>
+            <option value="study" {% if request.args.get('category') == 'study' %}selected{% endif %}>Study</option>
+            <option value="shopping" {% if request.args.get('category') == 'shopping' %}selected{% endif %}>Shopping</option>
+            <option value="fitness" {% if request.args.get('category') == 'fitness' %}selected{% endif %}>Fitness</option>
+        </select>
+
+        <!-- Sort Filter -->
+        <select name="sort" class="filter-select" onchange="this.form.submit()">
+            <option value="pinned" {% if request.args.get('sort') == 'pinned' %}selected{% endif %}>Sort: Pinned</option>
+            <option value="due_date" {% if request.args.get('sort') == 'due_date' %}selected{% endif %}>Due Date</option>
+            <option value="priority" {% if request.args.get('sort') == 'priority' %}selected{% endif %}>Priority</option>
+        </select>
+    </form>
+</div>
+
+<!-- Task List -->
+<ul class="task-list">
+    {% for task in tasks %}
+        {% set date_class = '' %}
+        {% if task.date %}
+            {% if task.date < today %}
+                {% set date_class = 'expired' %}
+            {% elif task.date == today %}
+                {% set date_class = 'today' %}
+            {% elif (task.date - today).days == 1 %}
+                {% set date_class = 'urgent' %}
+            {% endif %}
+        {% endif %}
+
+        <li class="task-item {% if task.status == 'completed' %}completed{% endif %} {% if task.is_pinned %}pinned{% endif %} {{ date_class }}" id="task-{{ task.id }}">
+
+            <!-- Pin Button -->
+            <form action="{{ url_for('toggle_pin', task_id=task.id) }}" method="POST">
+                <button type="submit" class="btn-star {% if task.is_pinned %}active{% endif %}" title="Pin to top">★</button>
+            </form>
+
+            <!-- Complete Checkbox -->
+            <form action="{{ url_for('toggle_task', task_id=task.id) }}" method="POST">
+                <input type="checkbox" class="custom-checkbox" {% if task.status == 'completed' %}checked{% endif %} onchange="this.form.submit()">
+            </form>
+
+            <div class="task-info">
+                <div class="task-title">
+                    {{ task.title }}
+                </div>
+                <div class="task-meta">
+                    <span class="badge badge-{{ task.category }}">{{ task.category }}</span>
+                    <span>• {{ task.priority|capitalize }}</span>
+                    {% if task.date %}
+                    <span>• 📅 {{ task.date.strftime('%b %d') }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="task-actions" style="display: flex; gap: 5px;">
+                <button onclick="openEditModal('{{ task.id }}', '{{ task.title|escape }}', '{{ task.priority }}', '{{ task.category }}')" class="btn btn-change" title="Edit" type="button">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                </button>
+
+                <form action="{{ url_for('remove', task_id=task.id) }}" method="POST" onsubmit="return confirm('Delete this task?');">
+                    <button type="submit" class="btn btn-remove" title="Remove">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                    </button>
+                </form>
+            </div>
+        </li>
+    {% else %}
+        <li style="text-align: center; padding: 40px 20px; color: var(--text-muted);">🌱 No tasks found. Time to relax or add a new goal!</li>
+    {% endfor %}
+</ul>
+
+<!-- Bottom Actions -->
+<div class="main-actions">
+    <a href="{{ url_for('add') }}" class="btn btn-add" style="flex: 2;">+ Add New Task</a>
+    <a href="{{ url_for('export_csv') }}" class="btn btn-cancel" style="flex: 1;" title="Export to Excel/CSV">📥 Export</a>
+</div>
+
+{% else %}
+<div style="text-align: center; padding: 50px 20px;">
+    <h3 style="color: var(--primary-color); margin-bottom: 10px;">Welcome to Nature Task Manager</h3>
+    <p style="color: var(--text-muted); margin-bottom: 25px;">Organize your life with peace of mind.</p>
+    <a href="{{ url_for('login') }}" class="btn btn-primary" style="padding: 12px 30px; font-size: 1rem;">Get Started</a>
+</div>
+{% endif %}
+
+<!-- Quick Edit Modal -->
+<div id="editModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <h3 style="color: var(--primary-color); margin-bottom: 15px;">Quick Edit</h3>
+
+        <form action="{{ url_for('quick_edit') }}" method="POST">
+            <input type="hidden" name="task_id" id="modal-task-id">
+            <div class="form-group">
+                <label class="form-label">Title</label>
+                <input type="text" name="title" id="modal-title" class="form-input" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Category</label>
+                <select name="category" id="modal-category" class="form-select">
+                    <option value="personal">Personal</option>
+                    <option value="work">Work</option>
+                    <option value="study">Study</option>
+                    <option value="shopping">Shopping</option>
+                    <option value="fitness">Fitness</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Priority</label>
+                <select name="priority" id="modal-priority" class="form-select">
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                </select>
+            </div>
+            <div class="btn-group" style="display: flex; gap: 10px;">
+                <a href="#" id="full-edit-link" class="btn btn-change" style="flex: 1;">Full Edit</a>
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
