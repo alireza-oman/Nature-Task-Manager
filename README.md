@@ -1,94 +1,106 @@
-# 🌲 Nature Task Manager
+# Nature Task Manager
 
-A modern and responsive **To-Do List web application** built with **Flask** and **Flask-SQLAlchemy**.
+A task management web application built with Python and Flask, designed to help users organize and manage their daily tasks efficiently.
 
-Nature Task Manager helps users organize their daily tasks with authentication, priorities, categories, due dates, filtering, sorting, progress tracking, and CSV export.
+The application provides task organization, priority management, filtering, sorting, progress tracking, and CSV export.
 
-## ✨ Features
+## Features
 
-* 🔐 User registration and login
-* 🔒 User-specific task management
-* ✅ Create, edit, complete, and delete tasks
-* 📌 Pin important tasks
-* 🎯 Set task priority
-* 🗂️ Organize tasks by category
-* 📅 Set due dates
-* 🔎 Search tasks
-* 🔽 Filter tasks by status, priority, and category
-* 🔃 Sort tasks by pinned status, due date, or priority
-* 📊 Track task completion progress
-* 📥 Export tasks to CSV
-* 🌙 Dark / Light mode
-* 🔑 Secure password hashing with Werkzeug
-* 📱 Responsive interface
+### Authentication
+- User registration and login
+- Secure password hashing using Werkzeug
+- User-specific task management
 
-## 🛠️ Technologies
+### Task Management
+- Create, edit, complete, and delete tasks
+- Pin important tasks
+- Assign priorities to tasks
+- Organize tasks by category
+- Set task due dates
 
-* **Python**
-* **Flask**
-* **Flask-SQLAlchemy**
-* **SQLAlchemy**
-* **Jinja2**
-* **Werkzeug**
-* **SQLite** for local development
-* **PostgreSQL** support
-* **HTML5**
-* **CSS3**
-* **JavaScript**
+### Search and Organization
+- Search tasks
+- Filter tasks by status, priority, and category
+- Sort tasks by pinned status, due date, and priority
 
-## 📁 Project Structure
+### Additional Features
+- Task completion progress tracking
+- Export tasks to CSV
+- Dark and light theme support
+- Responsive user interface
+- Persistent theme preference using localStorage
+
+## Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| Python | Backend programming language |
+| Flask | Web framework |
+| Flask-SQLAlchemy | Database integration |
+| SQLAlchemy | Object-relational mapping |
+| Jinja2 | Template rendering |
+| Werkzeug | Password hashing and security utilities |
+| SQLite | Default development database |
+| PostgreSQL | Supported database |
+| HTML5 | Web page structure |
+| CSS3 | Styling and responsive design |
+| JavaScript | Client-side functionality |
+
+## Project Structure
 
 ```text
-To-Do-List/
+Nature-Task-Manager/
+│
+├── static/
+├── templates/
 │
 ├── app.py
 ├── requirements.txt
 ├── .gitignore
-│
-├── templates/
-│   ├── base.html
-│   ├── home.html
-│   ├── login.html
-│   ├── register.html
-│   ├── add_task.html
-│   └── edit_task.html
-│
-└── static/
-    ├── css/
-    │   └── style.css
-    │
-    └── js/
-        └── script.js
+└── README.md
 ```
 
-## 🚀 Installation
+## Installation
 
-Clone the repository:
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/alireza-oman/Nature-Task-Manager.git
+```
+
+### 2. Navigate to the Project Directory
+
+```bash
 cd Nature-Task-Manager
 ```
 
-Create a virtual environment:
+### 3. Create a Virtual Environment
 
 ```bash
 python -m venv venv
 ```
 
-Activate it on Windows:
+### 4. Activate the Virtual Environment
+
+**Windows:**
 
 ```bash
 venv\Scripts\activate
 ```
 
-Install the dependencies:
+**Linux / macOS:**
+
+```bash
+source venv/bin/activate
+```
+
+### 5. Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## ⚙️ Environment Variables
+## Configuration
 
 Create a `.env` file in the project root:
 
@@ -98,15 +110,15 @@ SECRET_KEY=your-secret-key
 
 The application uses SQLite by default for local development.
 
-To use PostgreSQL, set the database connection URL:
+To use PostgreSQL, configure the database connection URL:
 
 ```env
 DATABASE_URL=postgresql://username:password@host:5432/database_name
 ```
 
-Sensitive values such as `.env` should never be committed to GitHub.
+Never commit sensitive configuration values or `.env` files to the repository.
 
-## ▶️ Run the Application
+## Usage
 
 Start the Flask application:
 
@@ -114,56 +126,53 @@ Start the Flask application:
 python app.py
 ```
 
-Open the application in your browser:
+Open your browser and navigate to:
 
 ```text
 http://127.0.0.1:5000
 ```
 
-## 🔐 Authentication
+Register an account or log in to start managing your tasks.
 
-Users can create an account and log in to manage their personal tasks.
+## Authentication and Data Management
 
-Passwords are securely hashed using Werkzeug before being stored in the database.
+Users can register and log in to access their personal task lists.
 
-Each task is associated with its owner, preventing users from accessing or modifying other users' tasks.
+Passwords are hashed using Werkzeug before being stored in the database.
 
-## 📊 Task Management
+Each task is associated with its owner, allowing users to manage their own tasks independently.
 
-Each task can contain:
+## Database
 
-* Title
-* Description
-* Category
-* Priority
-* Due date
-* Status
-* Pinned state
-* Creation date
+The application uses Flask-SQLAlchemy for database operations.
 
-## 🗃️ Database
+- SQLite is used by default for local development.
+- PostgreSQL is supported through the `DATABASE_URL` environment variable.
 
-The application uses **Flask-SQLAlchemy** as the ORM.
+## CSV Export
 
-SQLite is used for local development, while the application is also prepared to work with PostgreSQL through the `DATABASE_URL` environment variable.
+Users can export their tasks as CSV files.
 
-## 📥 CSV Export
+The exported data includes:
 
-Users can export their tasks as a CSV file containing:
+- Task ID
+- Title
+- Description
+- Due Date
+- Priority
+- Category
+- Status
+- Pinned State
 
-```text
-ID
-Title
-Description
-Due Date
-Priority
-Category
-Status
-Pinned
-```
+## Theme Support
 
-## 🌙 Theme
+The application supports both dark and light themes.
 
-The application includes a Dark / Light mode toggle.
+The selected theme preference is stored in the browser's `localStorage`, allowing it to persist across page refreshes.
 
-The selected theme is stored in the browser's `localStorage`, so the preference remains after refreshing the page.
+## Author
+
+**Alireza**
+
+- GitHub: [@alireza-oman](https://github.com/alireza-oman)
+- Repository: [Nature Task Manager](https://github.com/alireza-oman/Nature-Task-Manager)
