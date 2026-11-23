@@ -14,12 +14,7 @@ app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///to_do_database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-secret_key = os.getenv('SECRET_KEY')
-if not secret_key:
-    secret_key = os.urandom(32).hex()
-
-app.config['SECRET_KEY'] = secret_key
-app.config['SQLALCHEMY_ECHO'] = True
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
 db = SQLAlchemy(app)
@@ -65,6 +60,17 @@ def login_required(f):
         return f(*args, **kwargs)
 
     return decorated_function
+
+
+# ----------------- توابع کمکی ----------------- #
+
+def parse_task_date(raw_date):
+    if not raw_date:
+        return None
+    try:
+        return datetime.strptime(raw_date.strip(), "%Y-%m-%d").date()
+    except ValueError:
+        return None
 
 
 # ----------------- مسیرها (Routes) ----------------- #
@@ -130,7 +136,7 @@ def add():
     if request.method == 'POST':
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
-        raw_date = request.form.get('date')
+        raw_date = request.form.get('date', '').strip()
         priority = request.form.get('priority', 'medium')
         category = request.form.get('category', 'personal')
         status = request.form.get('status', 'active')
@@ -140,7 +146,10 @@ def add():
             flash('Title is required!', 'error')
             return render_template('add_task.html')
 
-        task_date = datetime.strptime(raw_date, "%Y-%m-%d").date() if raw_date else None
+        task_date = parse_task_date(raw_date)
+        if raw_date and task_date is None:
+            flash('Invalid date format. Please use YYYY-MM-DD.', 'error')
+            return render_template('add_task.html')
 
         task = Tasks(
             title=title,
@@ -215,9 +224,13 @@ def update(task_id):
     task.title = request.form.get('title', task.title).strip()
     task.description = request.form.get('description', '').strip()
 
-    raw_date = request.form.get('date')
-    task.date = datetime.strptime(raw_date, "%Y-%m-%d").date() if raw_date else None
+    raw_date = request.form.get('date', '').strip()
+    task_date = parse_task_date(raw_date)
+    if raw_date and task_date is None:
+        flash('Invalid date format. Please use YYYY-MM-DD.', 'error')
+        return render_template('edit_task.html', task=task)
 
+    task.date = task_date
     task.priority = request.form.get('priority', 'medium')
     task.category = request.form.get('category', 'personal')
     task.status = request.form.get('status', 'active')
