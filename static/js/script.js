@@ -13,12 +13,23 @@ function updateThemeIcon() {
     }
 }
 
-// بارگذاری اولیه تم
+// بارگذاری اولیه تم و اتصال رویدادهای مودال ویرایش سریع
 document.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('theme') === 'dark') {
         document.body.classList.add('dark-mode');
     }
     updateThemeIcon();
+
+    document.querySelectorAll('.js-edit-task-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            openEditModal(
+                btn.dataset.taskId,
+                btn.dataset.taskTitle,
+                btn.dataset.taskPriority,
+                btn.dataset.taskCategory
+            );
+        });
+    });
 });
 
 // باز کردن مودال ویرایش سریع
