@@ -5,6 +5,7 @@ from datetime import datetime, date, timedelta
 from functools import wraps
 from flask import Flask, request, render_template, redirect, url_for, session, flash, Response
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import case
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 
@@ -14,7 +15,12 @@ app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///to_do_database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+
+secret_key = os.getenv('SECRET_KEY')
+if not secret_key:
+    secret_key = os.urandom(32).hex()
+app.config['SECRET_KEY'] = secret_key
+
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=30)
 
 db = SQLAlchemy(app)
@@ -73,6 +79,16 @@ def parse_task_date(raw_date):
         return None
 
 
+def parse_positive_int(raw_value):
+    if raw_value is None:
+        return None
+    try:
+        value = int(str(raw_value).strip())
+        return value if value > 0 else None
+    except (ValueError, TypeError):
+        return None
+
+
 # ----------------- مسیرها (Routes) ----------------- #
 
 @app.route('/')
@@ -107,10 +123,16 @@ def home():
         query = query.filter(Tasks.category == category_filter)
 
     # مرتب‌سازی (تسک‌های پین‌شده همیشه اولویت اول را دارند)
+    priority_rank = case(
+        {'high': 3, 'medium': 2, 'low': 1},
+        value=Tasks.priority,
+        else_=0
+    )
+
     if sort_by == 'due_date':
-        query = query.order_by(Tasks.is_pinned.desc(), Tasks.date.asc().nullslast())
+        query = query.order_by(Tasks.is_pinned.desc(), Tasks.date.is_(None).asc(), Tasks.date.asc())
     elif sort_by == 'priority':
-        query = query.order_by(Tasks.is_pinned.desc(), Tasks.priority.desc())
+        query = query.order_by(Tasks.is_pinned.desc(), priority_rank.desc(), Tasks.id.desc())
     else:  # پیش‌فرض: جدیدترین‌ها و پین‌شده‌ها
         query = query.order_by(Tasks.is_pinned.desc(), Tasks.id.desc())
 
@@ -198,10 +220,17 @@ def remove(task_id):
 @app.route('/quick_edit', methods=['POST'])
 @login_required
 def quick_edit():
-    task_id = request.form.get('task_id')
+    task_id = parse_positive_int(request.form.get('task_id'))
+    if task_id is None:
+        flash('Invalid task ID.', 'error')
+        return redirect(url_for('home'))
+
     task = Tasks.query.filter_by(id=task_id, user_id=session['user_id']).first_or_404()
 
-    task.title = request.form.get('title', task.title).strip()
+    new_title = request.form.get('title', task.title).strip()
+    if new_title:
+        task.title = new_title
+
     task.priority = request.form.get('priority', task.priority)
     task.category = request.form.get('category', task.category)
 
@@ -221,7 +250,12 @@ def full_edit(task_id):
 def update(task_id):
     task = Tasks.query.filter_by(id=task_id, user_id=session['user_id']).first_or_404()
 
-    task.title = request.form.get('title', task.title).strip()
+    new_title = request.form.get('title', task.title).strip()
+    if not new_title:
+        flash('Title is required!', 'error')
+        return render_template('edit_task.html', task=task)
+
+    task.title = new_title
     task.description = request.form.get('description', '').strip()
 
     raw_date = request.form.get('date', '').strip()
@@ -330,4 +364,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=os.getenv('FLASK_DEBUG', 'false').lower() == 'true')
